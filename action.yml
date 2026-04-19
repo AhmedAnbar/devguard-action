@@ -1,0 +1,42 @@
+name: 'DevGuard'
+description: 'Audit Laravel projects for production-readiness and clean architecture.'
+author: 'AhmedAnbar'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  tool:
+    description: 'Which DevGuard tool to run: deploy, architecture, all, or any registered tool name.'
+    required: false
+    default: 'all'
+  path:
+    description: 'Project path relative to the workspace.'
+    required: false
+    default: '.'
+  json:
+    description: 'Set to "true" to output a JSON report.'
+    required: false
+    default: 'false'
+  fail-on-warning:
+    description: 'Set to "true" to also fail the build on warnings (not just failures).'
+    required: false
+    default: 'false'
+
+outputs:
+  exit-code:
+    description: 'The exit code returned by DevGuard (0 = pass, 1 = check failure, 2 = tool error).'
+  score:
+    description: 'The deploy readiness score (0–100). Only set when tool=deploy and json=true.'
+  passed:
+    description: 'true / false — whether all checks passed (json mode only).'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.tool }}
+    - ${{ inputs.path }}
+    - ${{ inputs.json }}
+    - ${{ inputs.fail-on-warning }}
