@@ -1,4 +1,4 @@
-name: 'DevGuard'
+name: 'DevGuard for Laravel'
 description: 'Audit Laravel projects for production-readiness and clean architecture.'
 author: 'AhmedAnbar'
 
