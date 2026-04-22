@@ -102,6 +102,8 @@ echo "Exit: $?"   # Expect 0 for good fixture
 3. **Marketplace display names must be globally unique.** Short generic names ("DevGuard") are usually taken. Use descriptive ones.
 4. **Action consumers pin to `@v1`.** That's why we force-update the rolling tag on every patch. Force-pushing exact-version tags (`v1.0.2`) would be wrong; force-pushing `v1` is correct.
 5. **First-run Docker actions are slow** (~60s) because GitHub's runners pull the image fresh. Subsequent runs cache to ~10s. This is the cost of the Docker action style — accept it for the simplicity.
+6. **CRITICAL: For 0.x DevGuard versions, the Dockerfile constraint MUST OR every supported minor explicitly.** v1.0.x shipped with `composer require ahmedanbar/devguard:^0.1`, which Composer reads as `>=0.1.0 <0.2.0` (caret pins to minor for 0.x). The action silently froze on v0.1.x for 8 minor releases — users of `@v1` got *only* deploy + architecture, missing env audit, deps audit, fix command, --html, baseline, SARIF, etc. Mirror image of the same trap that bit the CLI's `laravel/prompts` constraint and Ahmed's global `composer require`. Until DevGuard hits 1.0, the constraint must be `^0.1 || ^0.2 || ... || ^0.X`. Fixed in v1.1.0; bump the OR list every time DevGuard ships a new minor.
+7. **SARIF wiring (v1.1.0): the SARIF flag is additive — pass it alongside `--json`.** DevGuard ≥0.7.0 supports `--sarif=path` which writes a SARIF 2.1.0 file *without* replacing the stdout format. The entrypoint passes both `--json` (for outputs parsing) and `--sarif=...` (for GitHub Code Scanning) in one invocation. The pretty-print re-run (when `json=false`) deliberately *omits* `--sarif` to avoid double-writing the same file.
 
 ---
 
@@ -118,7 +120,8 @@ echo "Exit: $?"   # Expect 0 for good fixture
 
 ## Current state
 
-- Latest exact tag: **v1.0.2**
-- Rolling major: **v1** → v1.0.2
+- Latest exact tag: **v1.1.0** (Dockerfile version-pin fix + SARIF input)
+- Rolling major: **v1** → v1.1.0
 - Marketplace: listed as "DevGuard for Laravel"
 - CI smoke-tested in the CLI repo on every push (good fixture must pass, bad fixture must exit 1)
+- **Major event 2026-04-22**: discovered Dockerfile had been pinned to ahmedanbar/devguard:^0.1 since v1.0.0. Anyone on `@v1` had been missing every feature shipped between v0.2.0 and v0.7.0 — env audit, deps audit, install-hook, fix command, --html, baseline, SARIF. v1.1.0 widens the constraint and bundles the SARIF input.

@@ -30,10 +30,11 @@ That's it — every push runs both the Deploy Readiness scan and the Architectur
 
 | Input              | Default | Description                                                       |
 |--------------------|---------|-------------------------------------------------------------------|
-| `tool`             | `all`   | Which tool to run: `deploy`, `architecture`, `all`, or any name.  |
+| `tool`             | `all`   | Which tool to run: `deploy`, `architecture`, `env`, `deps`, `all`, or any name. |
 | `path`             | `.`     | Project path relative to the workspace.                           |
 | `json`             | `false` | Set to `true` to print a JSON report instead of human output.     |
 | `fail-on-warning`  | `false` | Set to `true` to fail the build on warnings (not just failures).  |
+| `sarif-output`     | `''`    | Path (workspace-relative or absolute) to write a SARIF 2.1.0 file. Pair with `github/codeql-action/upload-sarif` to surface findings as inline PR annotations. |
 
 ## Outputs
 
@@ -84,6 +85,33 @@ That's it — every push runs both the Deploy Readiness scan and the Architectur
   with:
     path: apps/laravel-api
 ```
+
+### GitHub Code Scanning — inline PR annotations
+
+```yaml
+permissions:
+  contents: read
+  security-events: write   # required to upload SARIF
+
+steps:
+  - uses: actions/checkout@v4
+
+  - name: Run DevGuard
+    uses: AhmedAnbar/devguard-action@v1
+    with:
+      sarif-output: devguard.sarif
+
+  - name: Upload SARIF
+    if: always()
+    uses: github/codeql-action/upload-sarif@v3
+    with:
+      sarif_file: devguard.sarif
+      category: devguard
+```
+
+Once the workflow runs, DevGuard findings appear as red/yellow squiggles on the changed lines of the PR diff and in the repository's **Security → Code scanning** tab. Severities map: failures → `error`, warnings → `warning`. Pass results aren't emitted. The same fingerprint scheme as DevGuard's baseline file is used, so GitHub correctly tracks "same issue across runs" — fix-then-rerun cycles don't re-flag fixed items.
+
+The `if: always()` on the upload step matters: if DevGuard reports failures (which makes the previous step exit non-zero), you still want the SARIF uploaded so reviewers see the findings.
 
 ## Versioning
 

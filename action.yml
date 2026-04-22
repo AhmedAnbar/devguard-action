@@ -23,6 +23,10 @@ inputs:
     description: 'Set to "true" to also fail the build on warnings (not just failures).'
     required: false
     default: 'false'
+  sarif-output:
+    description: 'Path to write a SARIF 2.1.0 file (relative to workspace, or absolute). When set, enables GitHub Code Scanning integration — pair with github/codeql-action/upload-sarif.'
+    required: false
+    default: ''
 
 outputs:
   exit-code:
@@ -40,3 +44,4 @@ runs:
     - ${{ inputs.path }}
     - ${{ inputs.json }}
     - ${{ inputs.fail-on-warning }}
+    - ${{ inputs.sarif-output }}
