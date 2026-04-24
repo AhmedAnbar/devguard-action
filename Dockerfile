@@ -9,7 +9,7 @@ FROM composer:2
 # SARIF, etc. Always OR every supported minor explicitly until DevGuard
 # hits 1.0. See lesson #6 in CLAUDE.md.
 RUN composer global require --no-interaction --prefer-dist \
-        "ahmedanbar/devguard:^0.1 || ^0.2 || ^0.3 || ^0.4 || ^0.5 || ^0.6 || ^0.7" \
+        "ahmedanbar/devguard:^0.1 || ^0.2 || ^0.3 || ^0.4 || ^0.5 || ^0.6 || ^0.7 || ^0.8" \
  && ln -s /tmp/vendor/bin/devguard /usr/local/bin/devguard
 
 COPY entrypoint.sh /entrypoint.sh
