@@ -15,6 +15,19 @@ case "${INPUT_PATH}" in
     *)  PROJECT_PATH="${WORKSPACE}/${INPUT_PATH}" ;;
 esac
 
+# Git 2.35.2+ refuses to operate on a working tree whose owner differs from
+# the current UID (CVE-2022-24765). Dockerized Actions run as root, but the
+# workspace is created by actions/checkout under the runner's UID — so every
+# git call inside the container trips "detected dubious ownership" and fails.
+# composer audit (2.4+) shells out to git internally, so without this the
+# DependencyAudit tool can't read its own composer.lock. Documented fix:
+# mark the mount point as safe. Scoped to WORKSPACE (and PROJECT_PATH when
+# different) — not using '*' to keep the trust surface narrow.
+git config --global --add safe.directory "${WORKSPACE}"
+if [ "${PROJECT_PATH}" != "${WORKSPACE}" ]; then
+    git config --global --add safe.directory "${PROJECT_PATH}"
+fi
+
 # Resolve a relative SARIF path against the workspace so the file lands
 # somewhere the caller can pick up (the workspace is mounted r/w; /tmp
 # inside the container disappears when the action ends).
